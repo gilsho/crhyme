@@ -1,0 +1,15 @@
+.DS_Store
+._.DS_Store
+._WordNet-3.0
+._lib
+._rhyme-0.9
+._src
+.idea/
+WordNet-3.0/
+final.iml
+lib/
+out/
+ppdb-1.0-m-all
+ppdb-1.0-m-all.gz
+rhyme-0.9/
+src/edu/

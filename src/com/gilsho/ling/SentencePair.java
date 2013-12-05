@@ -12,6 +12,13 @@ public class SentencePair {
     public Sentence first;
     public Sentence second;
 
+    public boolean firstReordered = false;
+    public boolean secondReordered = false;
+    public boolean firstSynonomyUsed = false;
+    public boolean secondSynonmUsed = false;
+    // public boolean firstParapharseUsed = false;
+    // public boolean secondParaphraseUsed = false;
+
     public SentencePair(Sentence first, Sentence second) {
 
         this.first = first;
