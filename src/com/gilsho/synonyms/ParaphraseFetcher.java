@@ -19,7 +19,7 @@ public class ParaphraseFetcher {
 
     private static final String filepath = "/Users/gilsho/Desktop/NLP/ppdb-1.0-s-all";
 
-    private static Map<String,List<String>> paraphraseTable;
+    private static Map<String,List<String>> paraphraseTable = null;
 
     private static void populatePhraseTable() {
         paraphraseTable = new HashMap<String, List<String>>();
@@ -30,11 +30,13 @@ public class ParaphraseFetcher {
                 if (line == null) {
                     break;
                 }
-
-                int startIndex = line.indexOf("||| : ");
-                String firstPhrase = line.substring(,
-                                                    line.indexOf("")
-                String secondPhrase = new String();
+                String delimiter = "||| ";
+                int startIndex = line.indexOf(delimiter);
+                int middleIndex = line.indexOf(delimiter, startIndex+delimiter.length());
+                int lastIndex = line.indexOf(delimiter, middleIndex+delimiter.length());
+                String firstPhrase = line.substring(startIndex + delimiter.length(), middleIndex-1);
+                String secondPhrase = line.substring(middleIndex + delimiter.length(), lastIndex -1);
+                System.out.println(firstPhrase + " " + secondPhrase);
             }
 
         } catch(IOException e) {
@@ -42,7 +44,7 @@ public class ParaphraseFetcher {
         }
     }
 
-    private static List<String> getPhrases(String word) {
+    public static List<String> getPhrases(String word) {
 
         if (paraphraseTable == null) {
             populatePhraseTable();
@@ -50,7 +52,7 @@ public class ParaphraseFetcher {
 
 
         List<String> list = new ArrayList<String>();
-
+        return list;
 
     }
 

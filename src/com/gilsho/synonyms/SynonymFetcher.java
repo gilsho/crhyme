@@ -16,6 +16,10 @@ import java.util.List;
 public class SynonymFetcher {
 
 
+    private static boolean containsSingleWord(String phrase) {
+        return phrase.indexOf(" ") == -1;
+    }
+
     public static List<String> getSynonyms(String word) {
         List<String> synList = new ArrayList<String>();
 
@@ -27,18 +31,24 @@ public class SynonymFetcher {
         for (int i = 0; i < synsets.length; i++) {
             nounSynset = (NounSynset)(synsets[i]);
             for (String candidate : nounSynset.getWordForms()) {
-                synList.add(candidate);
+                if (containsSingleWord(candidate)) {
+                    synList.add(candidate.toLowerCase());
+                }
             }
 
             for (NounSynset n : nounSynset.getHyponyms()) {
                 for (String candidate : n.getWordForms()) {
-                    synList.add(candidate);
+                    if (containsSingleWord(candidate)) {
+                        synList.add(candidate.toLowerCase());
+                    }
                 }
             }
 
             for (NounSynset n : nounSynset.getHypernyms()) {
                 for (String candidate : n.getWordForms()) {
-                    synList.add(candidate);
+                    if (containsSingleWord(candidate)) {
+                        synList.add(candidate.toLowerCase());
+                    }
                 }
             }
         }
@@ -66,11 +76,13 @@ public class SynonymFetcher {
             JSONArray jarr = jobj.getJSONArray("syn");
             for (int i=0; i<jarr.length(); i++) {
                 String s = jarr.getString(i);
-                synonyms.add(s);
+                if (containsSingleWord(s)) {
+                    synonyms.add(s);
+                }
             }
 
         } catch(Exception e) {
-            System.out.println(e);
+            System.err.println(e);
         } finally {
             return synonyms;
         }

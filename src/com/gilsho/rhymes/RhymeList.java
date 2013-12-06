@@ -13,6 +13,7 @@ import java.util.ListIterator;
  */
 public class RhymeList extends ArrayList<String> {
 
+
     public String findRhyme(List<String> list) {
         for (String s : list) {
             String r = findRhyme(s);
@@ -24,10 +25,11 @@ public class RhymeList extends ArrayList<String> {
     }
 
     public String findRhyme(String str) {
-        String word = str;
+
+        String word = str.toLowerCase();
         ListIterator<String> it = listIterator();
         while (it.hasNext()) {
-            String r = it.next();
+            String r = it.next().toLowerCase();
             if (r.equals(word)) {
                 return r;
             }

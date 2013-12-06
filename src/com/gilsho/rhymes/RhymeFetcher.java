@@ -1,5 +1,6 @@
 package com.gilsho.rhymes;
 
+import com.gilsho.ling.Sentence;
 import com.gilsho.web.JSONReader;
 import org.apache.http.client.utils.URIBuilder;
 import org.json.JSONArray;
@@ -23,9 +24,7 @@ public class RhymeFetcher {
 
    private static Runtime runtime = Runtime.getRuntime();
 
-   private static String lastToken(String word) {
-       return word;
-   }
+
 
     private static String stripNonAlpha(String token) {
         String str = "";
@@ -55,28 +54,27 @@ public class RhymeFetcher {
         return str;
     }
 
-    /* either token starts with a number, or it might have a comma at the end */
-//    private static String stripComma(String str) {
-//        if (!Character.isLetter(str.charAt(0)))
-//            return null;
-//        if (str.charAt(str.length()-2) == ',')
-//            return str.substring(0,str.length()-1);
-//        return str;
-//    }
+
 
     private static List<String> extractAllWords(String str)  {
         List<String> list = new ArrayList<String>();
         StringTokenizer strtok = new StringTokenizer(str);
         while (strtok.hasMoreTokens()) {
-            String tok = stripNonAlpha(strtok.nextToken().toLowerCase());
-            if (tok != null && !tok.equals("")) {
+            String tok = Sentence.stripTrailingCommaOrPeriod(strtok.nextToken().toLowerCase());
+            if (tok != null && !Sentence.containsInvalidChars(tok)) {
                 list.add(tok);
             }
         }
         return list;
     }
 
+    private static String lastToken(String word) {
+        return word;
+    }
+
+
     public static RhymeList getRhymes(String word) {
+        final String TITLE = "Finding perfect rhymes for";
         RhymeList rhymeList = new RhymeList();
         try {
             Process p = runtime.exec("rhyme " + lastToken(word));
@@ -84,14 +82,13 @@ public class RhymeFetcher {
             BufferedReader reader =
                     new BufferedReader(new InputStreamReader(
                             p.getInputStream()));
-            String line = reader.readLine();
-            assert(line.equals("Finding perfect rhymes for " + word + "..."));
-            line = reader.readLine();
-            while (line != null) {
+            while (true) {
+                String line = reader.readLine();
+                if (line.substring(0,TITLE.length()).equals(TITLE))
+                    continue;
                 for (String candidate : extractAllWords(line))
                     if (!candidate.equals(word))
                         rhymeList.add(candidate);
-                line = reader.readLine();
             }
 
 
@@ -126,7 +123,7 @@ public class RhymeFetcher {
             }
 
         } catch(Exception e) {
-            System.out.println(e);
+            System.err.println(e);
         } finally {
             return rhymeList;
         }

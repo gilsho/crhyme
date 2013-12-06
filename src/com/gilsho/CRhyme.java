@@ -2,6 +2,7 @@ package com.gilsho;
 
 import com.gilsho.ling.Sentence;
 import com.gilsho.ling.SentencePair;
+import com.gilsho.ling.SentencePairComparator;
 import com.gilsho.rhymes.RhymeFetcher;
 import com.gilsho.rhymes.RhymeList;
 import com.gilsho.synonyms.SynonymFetcher;
@@ -19,37 +20,6 @@ import java.util.*;
  */
 public class CRhyme {
 
-
-    public void match(SentencePair sentencePair) {
-
-//        Map<String, RhymeList> rhymeMap = new HashMap<String, RhymeList>();
-//        for (String word : sentencePair.first) {
-//            rhymeMap.put(word, RhymeFetcher.getRhymes(word));
-//        }
-//
-//        for (String word : sentencePair.second) {
-//            rhymeMap.put(word, RhymeFetcher.getRhymes(word));
-//        }
-
-//        for (int i=sentencePair.first.size()-1; i>=0; i--) {
-//
-//            String matchAgainst = sentencePair.first.get(i);
-//            RhymeList rhymes = RhymeFetcher.getRhymes(matchAgainst);
-//
-//            for (int j=sentencePair.second.size()-1; j>=0; j--) {
-//                String word = sentencePair.second.get(j);
-//
-//                // avoid exact matches
-//                if (word.equals(matchAgainst))
-//                    continue;
-//
-//                String r = rhymes.findRhyme(word);
-//                if (r != null) {
-//                    System.out.println("'" + matchAgainst + "' rhymes with: " + r);
-//                }
-//            }
-//        }
-    }
 
     private void populateSynMap(Sentence sent, Map<String, List<String>> synMap) {
         Tree root = sent.getParseTree();
@@ -81,7 +51,7 @@ public class CRhyme {
         }
     }
 
-    public List<SentencePair> matchNaive(SentencePair sentencePair) {
+    public PriorityQueue<SentencePair> generateCandidateMatches(SentencePair sentencePair) {
 
         Map<String, RhymeList> rhymeMap = new HashMap<String, RhymeList>();
         Map<String, List<String>> synMapFirst = new HashMap<String, List<String>>();
@@ -100,22 +70,30 @@ public class CRhyme {
         System.out.println("populating rhyme maps...");
         populateRhymeMap(allRhymes, rhymeMap);
 
-        List<SentencePair> results = new ArrayList<SentencePair>();
+        Comparator<SentencePair> comparator = new SentencePairComparator();
+        int capacity =  100;
+        PriorityQueue<SentencePair> results = new PriorityQueue<SentencePair>(capacity, comparator);
 
         for (int i=sentencePair.first.getWordList().size()-1; i>=0; i--) {
-            List<String> matchAgainst = synMapFirst.get(sentencePair.first.getWordList().get(i));
+            String examinedFirst = sentencePair.first.getWordList().get(i);
+            List<String> matchAgainst = synMapFirst.get(examinedFirst);
             if (matchAgainst == null) continue;
             for (String s : matchAgainst) {
                 RhymeList rlist = rhymeMap.get(s);
                 if (rlist == null) continue;
                 for (int j=sentencePair.second.getWordList().size()-1; j>=0; j--) {
-                    List<String> candidates = synMapSecond.get(sentencePair.second.getWordList().get(j));
+                    String examinedSecond = sentencePair.second.getWordList().get(j);
+                    List<String> candidates = synMapSecond.get(examinedSecond);
                     if (candidates == null) continue;
                     for (String t : candidates) {
+
+                        if (s.equals(t)) continue;
+
                         String r = rlist.findRhyme(t);
                         if (r == null) continue;
-                        System.out.println("FOUND MATCH: [" + sentencePair.first.getWordList().get(i) + " =>" + s + "] " +
-                           "rhymes with: [" + sentencePair.second.getWordList().get(j) + " => " + t + "]");
+
+                        System.out.println("FOUND MATCH: [" + examinedFirst + " =>" + s + "] " +
+                           "rhymes with: [" + examinedSecond + " => " + t + "]");
 
                         SentencePair pair = sentencePair.deepCopy();
 
@@ -137,11 +115,6 @@ public class CRhyme {
                             pair.second = new Sentence(flatten(pushToEnd(root.getLeaves().get(j), root)));
                         }
 
-//                        printTree(sentencePair.first);
-//                        printTree(pair.first);
-//                        printTree(sentencePair.second);
-//                        printTree(pair.second);
-
                         results.add(pair);
 
                     }
@@ -160,33 +133,6 @@ public class CRhyme {
         return list;
     }
 
-    private SentencePair findReorder(SentencePair sentencePair,
-                                     Map<String, RhymeList> rhymeMap,
-                                     Map<String, List<String>> synMap,
-                                     Tree parseFirst,
-                                     Tree parseSecond) {
-
-        SentencePair sentPair = sentencePair.deepCopy();
-
-
-        //special case where the sentence already rhymes
-        String lastWordFirst = sentPair.first.getWordList().get(sentPair.first.getWordList().size()-1);
-        String lastWordSecond = sentPair.second.getWordList().get(sentPair.second.getWordList().size()-1);
-        if (rhymeMap.get(lastWordFirst).findRhyme(lastWordSecond) != null) {
-            return sentPair;
-        }
-
-        //try sentence reordering
-        for (int i=sentPair.second.getWordList().size()-1; i>=0; i--) {
-            lastWordSecond =  sentPair.second.getWordList().get(i);
-            if (rhymeMap.get(lastWordFirst).findRhyme(lastWordSecond) != null) {
-                pushToEnd(parseSecond.getLeaves().get(i), parseSecond);
-            }
-        }
-
-
-        return null;
-    }
 
     private Tree pushToEnd(Tree t, Tree root) {
 
@@ -238,4 +184,6 @@ public class CRhyme {
         TreePrint tp = new TreePrint("penn");
         tp.printTree(parse);
     }
+
+
 }
